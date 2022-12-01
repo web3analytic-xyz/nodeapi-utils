@@ -2,7 +2,7 @@
 
 Toolkit to make large batches of async queries to the Alchemy API to download a historical dataset of blocks and transactions. See [Alchemy's website](https://docs.alchemy.com/reference/api-overview) for more information on their API.
 
-Making serial API calls to `eth_getBlockByNumber` costs roughly 0.15 seconds per call. Parallelizing across $N$ background workers roughly cuts that time down to $\frac{0.15}/{N}$ seconds per call. For instance, downloading 42.5M blocks from Arbitrum with 10 threads averages 0.01 seconds per call (~6 days for total). For machines with a large number of threads, this can greatly reduce the time-cost. 
+Making serial API calls to `eth_getBlockByNumber` costs roughly 0.15 seconds per call. Parallelizing across $N$ background workers roughly cuts that time down to $\frac{0.15}{N}$ seconds per call. For instance, downloading 42.5M blocks from Arbitrum with 10 threads averages 0.01 seconds per call (~6 days for total). For machines with a large number of threads, this can greatly reduce the time-cost. 
 
 ## Disclaimer
 
