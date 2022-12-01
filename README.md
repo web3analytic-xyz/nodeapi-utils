@@ -17,7 +17,7 @@ pip install -e .
 
 ## Usage
 
-Here is an example code snippet to download all blocks and transactions from Arbitrum. It will save a file every 100k blocks.
+Here is an example code snippet to download all blocks and transactions from Arbitrum. It will save a file of [jsonlines](https://pypi.org/project/jsonlines/) every 100k blocks.
 
 ```python
 from alchemy_utils import DatasetBuilder
@@ -32,4 +32,4 @@ builder = DatasetBuilder(
 builder.async_get(num_threads=10)
 ```
 
-Four chains are supported (`ethereum`, `arbitrum`, `optimism`, and `polygon`), though more can be easily added. The code is only supports `eth_getBlockByNumber` RPC endpoint, although this can be expanded upon request.
+Four chains are supported (`ethereum`, `arbitrum`, `optimism`, and `polygon`), though more can be easily added. The code only supports `eth_getBlockByNumber` RPC endpoint, although this can be expanded upon request.

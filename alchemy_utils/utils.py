@@ -46,8 +46,12 @@ class DatasetBuilder:
         # Create directory to save output if not existing yet
         makedirs(out_dir, exist_ok=True)
 
+        # Save every can't be bigger than the # of blocks
+        save_every = min(save_every, end_block - start_block)
+
         # Save to class
         self.rpc_url = rpc_url
+        self.out_dir = out_dir
         self.start_block = start_block
         self.end_block = end_block
         self.save_every = save_every
@@ -58,7 +62,7 @@ class DatasetBuilder:
         --
         num_threads (int, default=10): Number of parallel threads
         """
-        chunks = np.arange(self.start_block, self.end_block, self.save_every)
+        chunks = np.arange(self.start_block, self.end_block + 1, self.save_every)
 
         for i in range(len(chunks) - 1):
             start_block_i = int(chunks[i])
@@ -150,7 +154,7 @@ async def async_make_api_requests(url,
     """
     print("{0:<30} {1:>20}".format("Block number", "Completed at"))
 
-    with ThreadPoolExecutor(num_threads=num_threads) as executor:
+    with ThreadPoolExecutor(max_workers=num_threads) as executor:
         with requests.Session() as session:
             loop = asyncio.get_event_loop()
             START_TIME = default_timer()  # update global start time
@@ -158,7 +162,7 @@ async def async_make_api_requests(url,
                 loop.run_in_executor(
                     executor,
                     make_api_request,
-                    *(session, url, block)
+                    *(session, block, url)
                 )
                 for block in range(start_block, end_block)
             ]
