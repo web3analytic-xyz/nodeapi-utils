@@ -1,4 +1,4 @@
-# Alchemy Utilities
+# Block API Utilities
 
 Toolkit to make large batches of async queries to the Alchemy API to download a historical dataset of blocks and transactions. See [Alchemy's website](https://docs.alchemy.com/reference/api-overview) for more information on their API.
 
