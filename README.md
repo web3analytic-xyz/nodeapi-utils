@@ -15,6 +15,8 @@ After cloning this repo, run:
 pip install -e .
 ```
 
+If you want to upload data to Google cloud storage, you will need to setup [gloud CLI](https://cloud.google.com/sdk/docs/install) for authentication.
+
 ## Usage
 
 Here is an example code snippet to download all blocks and transactions from Arbitrum. It will save a file of [jsonlines](https://pypi.org/project/jsonlines/) every 100k blocks.
@@ -23,13 +25,18 @@ Here is an example code snippet to download all blocks and transactions from Arb
 from alchemy_utils import DatasetBuilder
 
 builder = DatasetBuilder(
-    api_key=os.environ['ALCHEMY_API_KEY'],
+    api_key=...,        # Your Alchemy API key
     out_dir='./out',
-    chain='arbitrum',
+    chain='arbitrum',   # Supports ethereum, arbitrum, optimism, and polygon
     start_block=1,
-    save_every=100000,
+    save_every=100000,  # Saves a file for every 100k blocks
 )
+# Increase # threads for faster performance
 builder.async_get(num_threads=10)
+
+# After that completes, upload to storage buckets (creates one for you)
+# NOTE: requires authentication through gcloud CLI
+builder.upload_buckets('new_bucket', delete_post_upload=False)
 ```
 
 Four chains are supported (`ethereum`, `arbitrum`, `optimism`, and `polygon`), though more can be easily added. The code only supports `eth_getBlockByNumber` RPC endpoint, although this can be expanded upon request.

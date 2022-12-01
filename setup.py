@@ -19,6 +19,7 @@ setup(
         "protobuf==4.21.10",
         "requests==2.28.1",
         "setuptools==41.2.0",
-        "tqdm==4.62.3"
+        "tqdm==4.62.3",
+        "google-cloud-storage==2.6.0"
     ]
 )
