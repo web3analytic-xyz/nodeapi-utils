@@ -34,9 +34,13 @@ builder = DatasetBuilder(
 # Increase # threads for faster performance
 builder.async_get(num_threads=10)
 
-# After that completes, upload to storage buckets (creates one for you)
+# After that completes, upload to storage buckets 
 # NOTE: requires authentication through gcloud CLI
-builder.upload_buckets('new_bucket', delete_post_upload=False)
+builder.upload_buckets(
+    'some_unique_bucket_name',
+    create_bucket=True,        # Creates a bucket 
+    delete_post_upload=False,  # Delete raw file after upload
+)
 ```
 
 Four chains are supported (`ethereum`, `arbitrum`, `optimism`, and `polygon`), though more can be easily added. The code only supports `eth_getBlockByNumber` RPC endpoint, although this can be expanded upon request.

@@ -86,11 +86,16 @@ class DatasetBuilder:
                 )
             loop.run_until_complete(future)
 
-    def upload_buckets(self, bucket_name, delete_post_upload=False):
+    def upload_buckets(self,
+                       bucket_name,
+                       create_bucket=False,
+                       delete_post_upload=False,
+                       ):
         r"""Upload cached CSVs to google cloud bucket.
         Arguments:
         --
-        bucket_name (str): Name of the storage bucket to upload to
+        bucket_name (str): Name of the storage bucket to upload to.
+        create_bucket (bool, default=False): If true, create the bucket.
         delete_post_upload (bool, default=False): Remove CSV after uploading if True.
         Notes:
         --
@@ -98,13 +103,17 @@ class DatasetBuilder:
         """
         storage_client = storage.Client()
 
-        # If the bucket does  not exist, create it
-        if not storage_bucket_exists(bucket_name):
+        if create_bucket:
+            # If designated, create the storage bucket
             success = create_storage_bucket(bucket_name)
 
             if not success:
                 raise Exception(f'Could not create bucket {bucket_name}. Try again?')
 
+        # Check that the bucket exists
+        assert storage_bucket_exists(bucket_name)
+
+        # Fetch the bucket
         bucket = storage_client.bucket(bucket_name)
 
         # Find all files we want to upload
