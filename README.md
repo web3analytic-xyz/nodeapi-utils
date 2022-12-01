@@ -15,7 +15,7 @@ After cloning this repo, run:
 pip install -e .
 ```
 
-If you want to upload data to Google cloud storage, you will need to setup [gloud CLI](https://cloud.google.com/sdk/docs/install) for authentication.
+If you want to upload data to Google cloud storage, you will need to provide a path to a service account credentials file at the environment variable `GOOGLE_APPLICATION_CREDENTIALS`. 
 
 ## Usage
 
