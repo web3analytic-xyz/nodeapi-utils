@@ -3,12 +3,16 @@ import asyncio
 import requests
 import jsonlines
 import numpy as np
+from tqdm import tqdm
+from glob import glob
 
-from os import makedirs
-from os.path import join
+from os import makedirs, remove
+from os.path import join, basename
 
 from timeit import default_timer
 from concurrent.futures import ThreadPoolExecutor
+
+from google.cloud import storage
 
 START_TIME = default_timer()
 
@@ -81,6 +85,44 @@ class DatasetBuilder:
                                         )
                 )
             loop.run_until_complete(future)
+
+    def upload_buckets(self, bucket_name, delete_post_upload=False):
+        r"""Upload cached CSVs to google cloud bucket.
+        Arguments:
+        --
+        bucket_name (str): Name of the storage bucket to upload to
+        delete_post_upload (bool, default=False): Remove CSV after uploading if True.
+        Notes:
+        --
+        A progress bar will be printed upon execution.
+        """
+        storage_client = storage.Client()
+
+        # If the bucket does  not exist, create it
+        if not storage_bucket_exists(bucket_name):
+            success = create_storage_bucket(bucket_name)
+
+            if not success:
+                raise Exception(f'Could not create bucket {bucket_name}. Try again?')
+
+        bucket = storage_client.bucket(bucket_name)
+
+        # Find all files we want to upload
+        data_files = glob(join(self.out_dir, '*.jsonl'))
+
+        pbar = tqdm(total=len(data_files), desc='uploading to bucket')
+        for data_file in data_files:
+            blob_name = basename(data_file)
+            blob = bucket.blob(blob_name)
+
+            blob.upload_from_filename(data_file)
+
+            # Delete CSV if requested
+            if delete_post_upload:
+                remove(data_file)
+
+            pbar.update()
+        pbar.close()
 
 
 def get_alchemy_rpc(chain, api_key):
@@ -214,3 +256,31 @@ def make_api_request(session, block_number, url):
         print("{0:<30} {1:>20}".format(block_number, completed_at))
 
         return response_data
+
+
+def storage_bucket_exists(gcloud_bucket):
+    r"""Checks if a storage bucket exists.
+    Returns:
+    --
+    exists (bool): True if the bucket exists; False otherwise.
+    """
+    client = storage.Client()
+    exists = storage.Bucket(client, gcloud_bucket).exists()
+
+    return exists
+
+
+def create_storage_bucket(gcloud_bucket):
+    r"""Creates a new storage bucket.
+    Returns:
+    --
+    success (bool): True if the bucket was created. False otherwise.
+    Notes:
+    --
+    Assumes the storage bucket does not exist yet. We do not explicitly 
+    check for this.
+    """
+    client = storage.Client()
+    client.create_bucket(gcloud_bucket)
+    success = storage_bucket_exists(gcloud_bucket)
+    return success
