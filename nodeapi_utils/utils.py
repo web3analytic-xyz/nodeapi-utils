@@ -21,8 +21,10 @@ class DatasetBuilder:
     r"""Builds a dataset of historical transaction data.
     Arguments:
     --
-    api_key (str): Alchemy API key.
-    out_dir (str): Output directory to save API responses to. 
+    rpc_provider (str): RPC provider name (e.g. quicknode, alchemy, infura).
+    rpc_provider_url (Optional[str],default=None): RPC endpoint. Optional if using api_key.
+    api_key (Optional[str],default=None): RPC Provider API key. Optional if using rpc_provider_url.
+    out_dir (Optional[str], default='./output'): Output directory to save API responses to. 
     chain (str, default=ethereum): Which chain to pull data from?
     start_block (int, default=1): Which block number to start pulling data from?
     end_block (Optional[int], default=None): Which block number to stop pulling data from?
@@ -31,20 +33,26 @@ class DatasetBuilder:
         For example, a dataset of 1M rows will be saved through 10 files if `save_every` is 100k.
     """
     def __init__(self,
-                 api_key,
-                 out_dir,
+                 rpc_provider,
+                 rpc_provider_url=None,
+                 api_key=None,
+                 out_dir='./output',
                  chain='ethereum',
                  start_block=1,
                  end_block=None,
                  save_every=100000,
                  ):
-        rpc_url = get_alchemy_rpc(chain, api_key)
 
+        if rpc_provider_url==None and api_key==None:
+            raise Exception ('You have to provide at least one of the following parameters: rpc_provider_url or api_key.')
+        
+        rpc_url = get_rpc_provider(rpc_provider, rpc_provider_url, chain, api_key)
+        
         if end_block is None:
-            # Ping Alchemy to get the latest block
+            # Ping RPC to get the latest block
             last_block = get_current_block(rpc_url)
-            if last_block is None:
-                raise Exception('Failed to fetch latest block number.')
+            if last_block is not int:
+                raise Exception('Failed to fetch latest block number. RPC Provider response: ' + str(last_block))
             end_block = last_block
 
         # Create directory to save output if not existing yet
@@ -134,31 +142,46 @@ class DatasetBuilder:
         pbar.close()
 
 
-def get_alchemy_rpc(chain, api_key):
-    r"""Returns the chain URL from Alchemy.
+def get_rpc_provider(rpc_provider, rpc_provider_url, chain, api_key):
+    r"""Returns the chain URL from RPC provider.
     Arguments:
     --
     chain (str): Chain to pull data from.
         Choices: ethereum | polygon | optimism | arbitrum
     api_key (str): API key
-        Alchemy API key
+        API key
     Returns:
     --
     provider_url (str): RPC url
     """
-    if chain == 'ethereum':
-        provider_url = f'https://eth-mainnet.g.alchemy.com/v2/{api_key}'
-    elif chain == 'polygon':
-        provider_url = f'https://polygon-mainnet.g.alchemy.com/v2/{api_key}'
-    elif chain == 'optimism':
-        provider_url = f'https://opt-mainnet.g.alchemy.com/v2/{api_key}'
-    elif chain == 'arbitrum':
-        provider_url = f'https://arb-mainnet.g.alchemy.com/v2/{api_key}'
-    else:
-        raise Exception(f'Chain {chain} not supported.')
+    if rpc_provider == 'quicknode':
+        provider_url = rpc_provider_url
+
+    if rpc_provider == 'alchemy':
+        if chain == 'ethereum':
+            provider_url = f'https://eth-mainnet.g.alchemy.com/v2/{api_key}'
+        elif chain == 'polygon':
+            provider_url = f'https://polygon-mainnet.g.alchemy.com/v2/{api_key}'
+        elif chain == 'optimism':
+            provider_url = f'https://opt-mainnet.g.alchemy.com/v2/{api_key}'
+        elif chain == 'arbitrum':
+            provider_url = f'https://arb-mainnet.g.alchemy.com/v2/{api_key}'
+        else:
+            raise Exception(f'Chain {chain} not supported.')
+    
+    if rpc_provider == 'infura':
+        if chain == 'ethereum':
+            provider_url = f'https://mainnet.infura.io/v3/{api_key}'
+        elif chain == 'polygon':
+            provider_url = f'https://polygon-mainnet.infura.io/v3/{api_key}'
+        elif chain == 'optimism':
+            provider_url = f'https://optimism-mainnet.infura.io/v3{api_key}'
+        elif chain == 'arbitrum':
+            provider_url = f'https://arbitrum-mainnet.infura.io/v3/{api_key}'
+        else:
+            raise Exception(f'Chain {chain} not supported.')
 
     return provider_url
-
 
 def get_current_block(url):
     r"""Get the current block.
@@ -180,7 +203,7 @@ def get_current_block(url):
     }
     response = requests.post(url, json=payload, headers=headers)
     if response.status_code != 200:
-        return None
+        return json.loads(response.text)
 
     response_data = json.loads(response.text)
     block_number = int(response_data['result'], 0)
@@ -230,11 +253,11 @@ async def async_make_api_requests(url,
 
 
 def make_api_request(session, block_number, url):
-    r"""Pings the method `alchemy_getTransactionReceipts`.
+    r"""Pings the method `eth_getBlockByNumber`.
     Arguments:
     --
     block_number (int): Number of the block.
-    url (str): URL for the Alchemy API.
+    url (str): URL for the RPC API.
     Returns:
     --
     response_data (Dict[str, any]): Block and transaction JSON.
