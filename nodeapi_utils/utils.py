@@ -51,8 +51,6 @@ class DatasetBuilder:
         if end_block is None:
             # Ping RPC to get the latest block
             last_block = get_current_block(rpc_url)
-            if last_block is not int:
-                raise Exception('Failed to fetch latest block number. RPC Provider response: ' + str(last_block))
             end_block = last_block
 
         # Create directory to save output if not existing yet
@@ -203,7 +201,7 @@ def get_current_block(url):
     }
     response = requests.post(url, json=payload, headers=headers)
     if response.status_code != 200:
-        return json.loads(response.text)
+        raise Exception('Failed to fetch latest block number. RPC Provider response: ' + str(json.loads(response.text)))
 
     response_data = json.loads(response.text)
     block_number = int(response_data['result'], 0)
