@@ -24,6 +24,10 @@ class DatasetBuilder:
     api_key (str): Alchemy API key.
     out_dir (str): Output directory to save API responses to. 
     chain (str, default=ethereum): Which chain to pull data from?
+        Options: ethereum | polygon | optimism | arbitrum
+    provider (str, default=alchemy): Which provider to use for rpc node? 
+        Options: alchemy | quicknode | chainstack
+    node_name (Optional[str], default=None): If provider is quicknode, you need to specify the name of your node.
     start_block (int, default=1): Which block number to start pulling data from?
     end_block (Optional[int], default=None): Which block number to stop pulling data from?
         If None is supplied, defaults to the latest block.
@@ -34,12 +38,25 @@ class DatasetBuilder:
                  api_key,
                  out_dir,
                  chain='ethereum',
+                 provider='alchemy',
+                 node_name=None,
                  start_block=1,
                  end_block=None,
                  save_every=100000,
                  ):
-        rpc_url = get_alchemy_rpc(chain, api_key)
+        assert chain in ['ethereum', 'polygon', 'optimism', 'arbitrum']
+        assert provider in ['alchemy', 'quicknode', 'chainstack']
 
+        if provider == 'alchemy':
+            rpc_url = get_alchemy_rpc(chain, api_key)
+        elif provider == 'quicknode':
+            assert node_name is not None, \
+                "Please provide the node name for quicknode."
+            rpc_url = get_quicknode_rpc(chain, node_name, api_key)
+        elif provider == 'chainstack':
+            assert node_name is not None, \
+                "Please provide the node name for Chainstack."
+            rpc_url = get_chainstack_rpc(node_name, api_key)
         if end_block is None:
             # Ping Alchemy to get the latest block
             last_block = get_current_block(rpc_url)
@@ -140,8 +157,7 @@ def get_alchemy_rpc(chain, api_key):
     --
     chain (str): Chain to pull data from.
         Choices: ethereum | polygon | optimism | arbitrum
-    api_key (str): API key
-        Alchemy API key
+    api_key (str): Alchemy API key
     Returns:
     --
     provider_url (str): RPC url
@@ -157,6 +173,44 @@ def get_alchemy_rpc(chain, api_key):
     else:
         raise Exception(f'Chain {chain} not supported.')
 
+    return provider_url
+
+
+def get_quicknode_rpc(chain, node_name, api_key):
+    r"""Returns the chain URL from QuickNode WSS. 
+    Arguments:
+    --
+    chain (str): Chain to pull data from.
+        Choices: ethereum | polygon | optimism | arbitrum | avalanche | bsc
+    node_name (str): Name of the quicknode endpoint.
+    api_key (str): QuickNode API key
+    Returns:
+    --
+    provider_url (str): RPC url
+    """
+    if chain == 'ethereum':
+        provider_url = f'https://{node_name}.discover.quiknode.pro/{api_key}'
+    elif chain == 'polygon':
+        provider_url = f'https://{node_name}.matic.discover.quiknode.pro/{api_key}'
+    elif chain == 'optimism':
+        provider_url = f'https://{node_name}.optimism.discover.quiknode.pro/{api_key}'
+    elif chain == 'arbitrum':
+        provider_url = f'https://{node_name}.arbitrum-mainnet.discover.quiknode.pro/{api_key}'
+    else:
+        raise Exception(f'Chain {chain} not supported.')
+    return provider_url
+
+def get_chainstack_rpc(node_name, api_key):
+    r""" 
+    Arguments:
+    --
+    node_name (str): Name ID of the Chainstack endpoint.
+    api_key (str): Chainstack API key
+    Returns:
+    --
+    provider_url (str): RPC url
+    """
+    provider_url = f'https://{node_name}.p2pify.com/{api_key}'
     return provider_url
 
 
@@ -292,4 +346,5 @@ def create_storage_bucket(gcloud_bucket):
     client = storage.Client()
     client.create_bucket(gcloud_bucket)
     success = storage_bucket_exists(gcloud_bucket)
+
     return success
