@@ -38,7 +38,7 @@ builder = DatasetBuilder(
     rpc_provider_url=..., # Your RPC provider url (Optional if using api_key)
     api_key=None,         # Your API key (Optional if using rpc_provider_url)
     out_dir='./output',   # Optional: Output directory to save API responses to
-    chain='arbitrum',     # Supports ethereum, arbitrum, optimism, polygon, etc.
+    chain='arbitrum',     # Supports ethereum, arbitrum, optimism, polygon, etc. (Optional if using rpc_provider_url)
     start_block=16092775, # Block to begin pulling data from
     save_every=100000,    # Saves a file for every 100k blocks
 )

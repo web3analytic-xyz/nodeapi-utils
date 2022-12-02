@@ -26,10 +26,10 @@ class DatasetBuilder:
     Arguments:
     --
     rpc_provider (str): RPC provider name (e.g. quicknode, alchemy, infura).
-    rpc_provider_url (Optional[str],default=None): RPC endpoint. Optional if using api_key.
-    api_key (Optional[str],default=None): RPC Provider API key. Optional if using rpc_provider_url.
+    rpc_provider_url (Optional[str],default=None): RPC endpoint. Optional if using `api_key`.
+    api_key (Optional[str],default=None): RPC Provider API key. Optional if using `rpc_provider_url`.
     out_dir (Optional[str], default='./output'): Output directory to save API responses to. 
-    chain (str, default=ethereum): Which chain to pull data from?
+    chain (str, default=ethereum): Which chain to pull data from? Optional if using `rpc_provider_url`.
     start_block (int, default=1): Which block number to start pulling data from?
     end_block (Optional[int], default=None): Which block number to stop pulling data from?
         If None is supplied, defaults to the latest block.
