@@ -35,14 +35,14 @@ from nodeapi_utils import DatasetBuilder
 
 builder = DatasetBuilder(
     rpc_provider=...,     # RPC provider name (e.g. quicknode, alchemy, infura)
-    rpc_provider_url=..., # Optional if using api_key: Your RPC provider url
-    api_key=None,         # Optional if using rpc_provider_url: Your API key
-    out_dir='./out',      # Optional: Output directory to save API responses to
-    chain='arbitrum',     # Supports ethereum, arbitrum, optimism, and polygon
-    start_block=16092775,
-    save_every=100000,  # Saves a file for every 100k blocks
+    rpc_provider_url=..., # Your RPC provider url (Optional if using api_key)
+    api_key=None,         # Your API key (Optional if using rpc_provider_url)
+    out_dir='./output',   # Optional: Output directory to save API responses to
+    chain='arbitrum',     # Supports ethereum, arbitrum, optimism, polygon, etc. (Optional if using rpc_provider_url)
+    start_block=16092775, # Block to begin pulling data from
+    save_every=100000,    # Saves a file for every 100k blocks
 )
-# Increase # threads for faster performance
+# Increase number of threads for faster performance
 builder.async_get(num_threads=10)
 
 # After that completes, upload to storage buckets
@@ -54,4 +54,4 @@ builder.upload_buckets(
 )
 ```
 
-The code only supports `eth_getBlockNumber` RPC method, and it's supported for the following chains (depending on the provider selected): `ethereum`, `arbitrum`, `arbitrum-nove`, `optimism`, `polygon`, `avalanche`, `celo`, `fantom`, `binance-smart-chain`, `gnosis`. Reach out for inquiries on additional methods to include.
+The code only supports `eth_getBlockNumber` RPC method, and it's supported for the following chains (depending on the provider selected): `ethereum`, `arbitrum`, `arbitrum-nova`, `optimism`, `polygon`, `avalanche`, `celo`, `fantom`, `binance-smart-chain`, `gnosis`. Reach out for inquiries on additional methods to include.

@@ -14,7 +14,11 @@ from concurrent.futures import ThreadPoolExecutor
 
 from google.cloud import storage
 
+# Internal variable used for logging
 START_TIME = default_timer()
+
+# List of supported RPC providers
+SUPPORTED_PROVIDERS = ['quicknode', 'alchemy', 'infura']
 
 
 class DatasetBuilder:
@@ -22,10 +26,10 @@ class DatasetBuilder:
     Arguments:
     --
     rpc_provider (str): RPC provider name (e.g. quicknode, alchemy, infura).
-    rpc_provider_url (Optional[str],default=None): RPC endpoint. Optional if using api_key.
-    api_key (Optional[str],default=None): RPC Provider API key. Optional if using rpc_provider_url.
+    rpc_provider_url (Optional[str],default=None): RPC endpoint. Optional if using `api_key`.
+    api_key (Optional[str],default=None): RPC Provider API key. Optional if using `rpc_provider_url`.
     out_dir (Optional[str], default='./output'): Output directory to save API responses to. 
-    chain (str, default=ethereum): Which chain to pull data from?
+    chain (str, default=ethereum): Which chain to pull data from? Optional if using `rpc_provider_url`.
     start_block (int, default=1): Which block number to start pulling data from?
     end_block (Optional[int], default=None): Which block number to stop pulling data from?
         If None is supplied, defaults to the latest block.
@@ -42,10 +46,15 @@ class DatasetBuilder:
                  end_block=None,
                  save_every=100000,
                  ):
+        assert rpc_provider in SUPPORTED_PROVIDERS, f'Provider {rpc_provider} not supported.'
 
-        if rpc_provider_url==None and api_key==None:
-            raise Exception ('You have to provide at least one of the following parameters: rpc_provider_url or api_key.')
-        
+        if (rpc_provider_url is None) and (api_key is None):
+            raise Exception('You have to provide at least one of the following parameters: `rpc_provider_url` or `api_key`.')
+
+        if rpc_provider == 'quicknode':
+            assert rpc_provider_url is not None, f'QuickNode requires you to specify the `rpc_provider_url`.'
+
+        # Get the URL to send requests to
         rpc_url = get_rpc_provider(rpc_provider, rpc_provider_url, chain, api_key)
         
         if end_block is None:
@@ -56,7 +65,7 @@ class DatasetBuilder:
         # Create directory to save output if not existing yet
         makedirs(out_dir, exist_ok=True)
 
-        # Save every can't be bigger than the # of blocks
+        # `save_every`` cannot be bigger than the number of blocks
         save_every = min(save_every, end_block - start_block)
 
         # Save to class
@@ -153,31 +162,40 @@ def get_rpc_provider(rpc_provider, rpc_provider_url, chain, api_key):
     provider_url (str): RPC url
     """
     if rpc_provider == 'quicknode':
+        # NOTE: QuickNode generates custom URLs for every project. 
         provider_url = rpc_provider_url
-
-    if rpc_provider == 'alchemy':
-        if chain == 'ethereum':
-            provider_url = f'https://eth-mainnet.g.alchemy.com/v2/{api_key}'
-        elif chain == 'polygon':
-            provider_url = f'https://polygon-mainnet.g.alchemy.com/v2/{api_key}'
-        elif chain == 'optimism':
-            provider_url = f'https://opt-mainnet.g.alchemy.com/v2/{api_key}'
-        elif chain == 'arbitrum':
-            provider_url = f'https://arb-mainnet.g.alchemy.com/v2/{api_key}'
+    elif rpc_provider == 'alchemy':
+        if rpc_provider_url is not None:
+            provider_url = rpc_provider_url
         else:
-            raise Exception(f'Chain {chain} not supported.')
-    
-    if rpc_provider == 'infura':
-        if chain == 'ethereum':
-            provider_url = f'https://mainnet.infura.io/v3/{api_key}'
-        elif chain == 'polygon':
-            provider_url = f'https://polygon-mainnet.infura.io/v3/{api_key}'
-        elif chain == 'optimism':
-            provider_url = f'https://optimism-mainnet.infura.io/v3{api_key}'
-        elif chain == 'arbitrum':
-            provider_url = f'https://arbitrum-mainnet.infura.io/v3/{api_key}'
+            # NOTE: This is not exhaustive. More can be added on request. Or use `provider_url`
+            if chain == 'ethereum':
+                provider_url = f'https://eth-mainnet.g.alchemy.com/v2/{api_key}'
+            elif chain == 'polygon':
+                provider_url = f'https://polygon-mainnet.g.alchemy.com/v2/{api_key}'
+            elif chain == 'optimism':
+                provider_url = f'https://opt-mainnet.g.alchemy.com/v2/{api_key}'
+            elif chain == 'arbitrum':
+                provider_url = f'https://arb-mainnet.g.alchemy.com/v2/{api_key}'
+            else:
+                raise Exception(f'Chain {chain} not supported.')
+    elif rpc_provider == 'infura':
+        if rpc_provider_url is not None:
+            provider_url = rpc_provider_url
         else:
-            raise Exception(f'Chain {chain} not supported.')
+            # NOTE: This is not exhaustive. More can be added on request. Or use `provider_url`
+            if chain == 'ethereum':
+                provider_url = f'https://mainnet.infura.io/v3/{api_key}'
+            elif chain == 'polygon':
+                provider_url = f'https://polygon-mainnet.infura.io/v3/{api_key}'
+            elif chain == 'optimism':
+                provider_url = f'https://optimism-mainnet.infura.io/v3{api_key}'
+            elif chain == 'arbitrum':
+                provider_url = f'https://arbitrum-mainnet.infura.io/v3/{api_key}'
+            else:
+                raise Exception(f'Chain {chain} not supported.')
+    else:
+        raise Exception(f'Provider {rpc_provider} not supported.')
 
     return provider_url
 
