@@ -5,6 +5,7 @@ This is a toolkit to make large batches of async queries to a RPC Provider API t
 - [QuickNode](https://www.quicknode.com/core-api)
 - [Alchemy](https://docs.alchemy.com/reference/api-overview)
 - [Infura](https://www.infura.io/product/overview)
+- [Chainstack](https://chainstack.com/solution)
 
 Making serial API calls to `eth_getBlockByNumber` costs roughly 0.15 seconds per call. Parallelizing across $N$ threads roughly cuts that time down to $\frac{0.15}{N}$ seconds per call. For instance, downloading 42.5M blocks from Arbitrum with 1 thread would take ~74 days, and with 10 threads it would take ~6 days (average 0.01 seconds per call). For machines with a large number of threads, this can greatly reduce the time-cost.
 
@@ -15,6 +16,7 @@ Parallelization does not reduce the cost of using RPC Provider API. Please monit
 - [QuickNode's Credits](https://www.quicknode.com/api-credits)
 - [Alchemy's Compute Units](https://docs.alchemy.com/reference/compute-units)
 - [Infura's Requests](https://www.infura.io/pricing)
+- [Chainstack's Requests](https://chainstack.com/pricing)
 
 ## Setup
 
@@ -34,11 +36,11 @@ Here is an example code snippet to download all blocks and transactions from Arb
 from nodeapi_utils import DatasetBuilder
 
 builder = DatasetBuilder(
-    rpc_provider=...,     # RPC provider name (e.g. quicknode, alchemy, infura)
+    rpc_provider=...,     # RPC provider name (e.g. quicknode, alchemy, infura, chainstack)
     rpc_provider_url=..., # Your RPC provider url (Optional if using api_key)
-    api_key=None,         # Your API key (Optional if using rpc_provider_url)
+    api_key=None,         # Your API key (Optional if using rpc_provider_url. Required for quicknode & chainstack)
     out_dir='./output',   # Optional: Output directory to save API responses to
-    chain='arbitrum',     # Supports ethereum, arbitrum, optimism, polygon, etc. (Optional if using rpc_provider_url)
+    chain='arbitrum',     # Supports ethereum, arbitrum, optimism, polygon, etc (Optional if using rpc_provider_url)
     start_block=16092775, # Block to begin pulling data from
     save_every=100000,    # Saves a file for every 100k blocks
 )
