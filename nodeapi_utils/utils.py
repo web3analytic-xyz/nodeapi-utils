@@ -51,10 +51,8 @@ class DatasetBuilder:
         if (rpc_provider_url is None) and (api_key is None):
             raise Exception('You have to provide at least one of the following parameters: `rpc_provider_url` or `api_key`.')
 
-        if rpc_provider == 'quicknode':
-            assert rpc_provider_url is not None, f'QuickNode requires you to specify the `rpc_provider_url`.'
-        if rpc_provider == 'chainstack':
-            assert rpc_provider_url is not None, f'Chainstack requires you to specify the `rpc_provider_url`.'
+        if rpc_provider in ['quicknode', 'chainstack']:
+            assert rpc_provider_url is not None, f'{rpc_provider} requires you to specify the `rpc_provider_url`.'
 
         # Get the URL to send requests to
         rpc_url = get_rpc_provider(rpc_provider, rpc_provider_url, chain, api_key)
@@ -167,6 +165,7 @@ def get_rpc_provider(rpc_provider, rpc_provider_url, chain, api_key):
         # NOTE: QuickNode generates custom URLs for every project. 
         provider_url = rpc_provider_url
     elif rpc_provider == 'chainstack':
+        # NOTE: ChainStack assumes provider URL is direcvtly given.
         provider_url = rpc_provider_url
     elif rpc_provider == 'alchemy':
         if rpc_provider_url is not None:
