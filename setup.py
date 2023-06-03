@@ -15,7 +15,7 @@ setup(
     url="https://github.com/web3analytic-xyz/nodeapi-utils",
     install_requires=[
         "jsonlines==3.1.0",
-        "numpy==1.21.4",
+        "numpy==1.21.1",
         "protobuf==4.21.10",
         "requests==2.28.1",
         "setuptools==41.2.0",
